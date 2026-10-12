@@ -71,6 +71,36 @@ app.post('/', async (req, res) => {
     }
 });
 
+app.post('/get', async (req, res) => {
+    const fileUrl = req.body.url;
+
+    if (req.headers.authorization !== `Bearer ${AUTH_TOKEN}`) {
+        res.status(403).send('无效的授权令牌');
+        return;
+    }
+
+    const timeout = req.body.timeout || 10000;
+
+    try {
+        const response = await request.get(fileUrl, {
+            encoding: 'utf8',
+            timeout,
+            resolveWithFullResponse: true,
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0'
+            }
+        });
+
+        res.status(200).send({
+            statusCode: response.statusCode,
+            data: response.body
+        });
+    } catch (err) {
+        res.status(502).send('代理GET请求失败');
+        console.error(`GET请求失败: ${err}`);
+    }
+});
+
 app.listen(SERVER_PORT, () => {
     console.log(`镜像下载服务器正在监听端口${SERVER_PORT}`);
 });
